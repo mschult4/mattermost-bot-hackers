@@ -22,7 +22,7 @@ const (
 	USER_LAST     = "Schulte"
 
 	TEAM_NAME        = "NDLUG"
-	CHANNEL_LOG_NAME = "botspam"
+	CHANNEL_LOG_NAME = "bots"
 )
 
 var client *model.Client4
@@ -64,7 +64,7 @@ func main() {
 	SendMsgToDebuggingChannel("_"+SAMPLE_NAME+" has **started** running_", "")
 
 	// Lets start listening to some channels via the websocket!
-	webSocketClient, err := model.NewWebSocketClient4("ws://chat.ndlug.org", client.AuthToken)
+	webSocketClient, err := model.NewWebSocketClient4("wss://chat.ndlug.org", client.AuthToken)
 	if err != nil {
 		println("We failed to connect to the web socket")
 		PrintError(err)
