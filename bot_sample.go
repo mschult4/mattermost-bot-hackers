@@ -15,14 +15,14 @@ import (
 const (
 	SAMPLE_NAME = "Mattermost Bot Sample"
 
-	USER_EMAIL    = "bot@example.com"
-	USER_PASSWORD = "password1"
-	USER_NAME     = "samplebot"
-	USER_FIRST    = "Sample"
-	USER_LAST     = "Bot"
+	USER_EMAIL    = "mschult4@nd.edu"
+	USER_PASSWORD = "password"
+	USER_NAME     = "hackers_bot"
+	USER_FIRST    = "Madalyn"
+	USER_LAST     = "Schulte"
 
-	TEAM_NAME        = "botsample"
-	CHANNEL_LOG_NAME = "debugging-for-sample-bot"
+	TEAM_NAME        = "NDLUG"
+	CHANNEL_LOG_NAME = "botspam"
 )
 
 var client *model.Client4
@@ -39,7 +39,7 @@ func main() {
 
 	SetupGracefulShutdown()
 
-	client = model.NewAPIv4Client("http://localhost:8065")
+	client = model.NewAPIv4Client("https://chat.ndlug.org")
 
 	// Lets test to see if the mattermost server is up and running
 	MakeSureServerIsRunning()
@@ -64,7 +64,7 @@ func main() {
 	SendMsgToDebuggingChannel("_"+SAMPLE_NAME+" has **started** running_", "")
 
 	// Lets start listening to some channels via the websocket!
-	webSocketClient, err := model.NewWebSocketClient4("ws://localhost:8065", client.AuthToken)
+	webSocketClient, err := model.NewWebSocketClient4("ws://chat.ndlug.org", client.AuthToken)
 	if err != nil {
 		println("We failed to connect to the web socket")
 		PrintError(err)
@@ -97,6 +97,12 @@ func MakeSureServerIsRunning() {
 
 func LoginAsTheBotUser() {
 	if user, resp := client.Login(USER_EMAIL, USER_PASSWORD); resp.Error != nil {
+		println(USER_EMAIL)
+		println(USER_PASSWORD)
+
+		println(user)
+		println(resp)
+		println(resp.Error)
 		println("There was a problem logging into the Mattermost server.  Are you sure ran the setup steps from the README.md?")
 		PrintError(resp.Error)
 		os.Exit(1)
