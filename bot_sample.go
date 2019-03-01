@@ -12,7 +12,7 @@ import (
 	"github.com/mattermost/mattermost-server/model"
 	"io/ioutil"
 	"encoding/json"
-	"fmt"
+	//"fmt"
 	//"encoding/base64"
 	"log"
 	//"reflect"
@@ -347,6 +347,11 @@ func HandleMsgFromDebuggingChannel(event *model.WebSocketEvent) {
 
 		// if you see any word matching 'score' then respond
 		if matched, _ := regexp.MatchString(`(?:^|\W)score(?:$|\W)`, post.Message); matched {
+			SendMsgToDebuggingChannel("Here's a score", post.Id)
+			return
+		}
+
+		if matched, _ := regexp.MatchString(`(?:^|\W)arsenal(?:$|\W)`, post.Message); matched {
 			client := &http.Client{}
 			req, _ := http.NewRequest("GET", "https://www.thesportsdb.com/api/v1/json/1/searchteams.php?t=Arsenal", nil)
 
@@ -364,42 +369,9 @@ func HandleMsgFromDebuggingChannel(event *model.WebSocketEvent) {
 			if err != nil {
 				log.Fatal("s error: ", err)
 			}
+      //fmt.Println(s.Teams[0].StrDescriptionEN)
 
-
-      fmt.Println(s.Teams[0].StrDescriptionEN)
-
-
-			//m := make(map[string]interface{})
-			//n := make(map[string]map[string]interface{})
-			//m := n["teams"]
-
-			//var m dataMsg
-			//err = json.Unmarshal(body, &m)
-			//if err != nil {
-			//	log.Fatal("m error: ", err)
-			//}
-
-			//strs := m["teams"].([]interface{})
-			//str1 := strs[0]
-			//fmt.Println(str1["idLeague"].(map[string]string))
-			//n, _ := m["teams"]
-      //var n dataMsg
-			//err = json.Unmarshal(*m["teams"], &n)
-      //var dst interface{}
-			//dst = new(dstStruct)
-			//err = json.Unmarshal(m.teams, &dst)
-			//if err != nil {
-			//	log.Fatal("dst error: ", err)
-			//}
-
-      //var str string
-			//err = json.Unmarshal(*n["idLeague"], &str)
-
-			//fmt.Println(m["teams"])
-
-
-
-			SendMsgToDebuggingChannel("Here's a score", post.Id)
+			SendMsgToDebuggingChannel(s.Teams[0].StrDescriptionEN, post.Id)
 			return
 		}
 
