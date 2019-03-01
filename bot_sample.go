@@ -8,8 +8,14 @@ import (
 	"os/signal"
 	"regexp"
 	"strings"
-
+  "net/http"
 	"github.com/mattermost/mattermost-server/model"
+	"io/ioutil"
+	"encoding/json"
+	"fmt"
+	//"encoding/base64"
+	"log"
+	//"reflect"
 )
 
 const (
@@ -31,6 +37,82 @@ var webSocketClient *model.WebSocketClient
 var botUser *model.User
 var botTeam *model.Team
 var debuggingChannel *model.Channel
+
+type Sports struct {
+IdTeam string `json:"idTeam"`
+IdSoccerXML string `json:"idSoccerXML"`
+IntLoved string `json:"intLoved"`
+StrTeam string `json:"strTeam"`
+StrTeamShort string `json:"strTeamShort"`
+StrAlternate string `json:"strAlternate"`
+IntFormedYear string `json:"intFormedYear"`
+StrSport string `json:"strSport"`
+StrLeague string `json:"strLeague"`
+IdLeague string `json:"idLeague"`
+StrDivision string `json:"strDivision"`
+StrManager string `json:"strManager"`
+StrStadium string `json:"strStadium"`
+StrKeywords string `json:"strKeywords"`
+StrRSS string `json:"strRSS"`
+StrStadiumThumb string `json:"strStadiumThumb"`
+StrStadiumDescription string `json:"strStadiumDescription"`
+StrStadiumLocation string `json:"strStadiumLocation"`
+IntStadiumCapacity string `json:"intStadiumCapacity"`
+StrWebsite string `json:"strWebsite"`
+StrFacebook string `json:"strFacebook"`
+StrTwitter string `json:"strTwitter"`
+StrInstagram string `json:"strInstagram"`
+StrDescriptionEN string `json:"strDescriptionEN"`
+StrDescriptionDE string `json:"strDescriptionDE"`
+StrDescriptionFR string `json:"strDescriptionFR"`
+StrDescriptionCN string `json:"strDescriptionCN"`
+StrDescriptionIT string `json:"strDescriptionIT"`
+StrDescriptionJP string `json:"strDescriptionJP"`
+StrDescriptionRU string `json:"strDescriptionRU"`
+StrDescriptionES string `json:"strDescriptionES"`
+StrDescriptionPT string `json:"strDescriptionPT"`
+StrDescriptionSE string `json:"strDescriptionSE"`
+StrDescriptionNL string `json:"strDescriptionNL"`
+StrDescriptionHU string `json:"strDescriptionHU"`
+StrDescriptionNO string `json:"strDescriptionNO"`
+StrDescriptionIL string `json:"strDescriptionIL"`
+StrDescriptionPL string `json:"strDescriptionPL"`
+StrGender string `json:"strGender"`
+StrCountry string `json:"strCountry"`
+StrTeamBadge string `json:"strTeamBadge"`
+StrTeamJersey string `json:"strTeamJersey"`
+StrTeamLogo string `json:"strTeamLogo"`
+StrTeamFanart1 string `json:"strTeamFanart1"`
+StrTeamFanart2 string `json:"strTeamFanart2"`
+StrTeamFanart3 string `json:"strTeamFanart3"`
+StrTeamFanart4 string `json:"strTeamFanart4"`
+StrTeamBanner string `json:"strTeamBanner"`
+StrYoutube string `json:"strYoutube"`
+StrLocked string `json:"strLocked"`
+}
+
+type SportsAPIResponse struct {
+  Teams []Sports `json:"teams"`
+}
+
+type dataMsg struct {
+	teams json.RawMessage
+}
+
+type dstStruct struct {
+	idLeague string
+}
+
+type Person struct {
+    Name string
+    Parents map[string]string
+}
+
+//type levelone struct {
+//	name string
+//	sublevel map[string]
+//}
+
 
 // Documentation for the Go driver can be found
 // at https://godoc.org/github.com/mattermost/platform/model#Client
@@ -225,6 +307,65 @@ func HandleMsgFromDebuggingChannel(event *model.WebSocketEvent) {
 			SendMsgToDebuggingChannel("Yes I'm running", post.Id)
 			return
 		}
+
+		// if you see any word matching 'score' then respond
+		if matched, _ := regexp.MatchString(`(?:^|\W)score(?:$|\W)`, post.Message); matched {
+			client := &http.Client{}
+			req, _ := http.NewRequest("GET", "https://www.thesportsdb.com/api/v1/json/1/searchteams.php?t=Arsenal", nil)
+
+			res, err := client.Do(req)
+			if err != nil {
+				log.Fatal("res error: ", err)
+			}
+			body, err := ioutil.ReadAll(res.Body)
+			if err != nil {
+				log.Fatal("body error: ", err)
+			}
+
+      var s = new(SportsAPIResponse)
+			err = json.Unmarshal([]byte(body), &s)
+			if err != nil {
+				log.Fatal("s error: ", err)
+			}
+
+
+      fmt.Println(s.Teams[0].StrDescriptionEN)
+
+
+			//m := make(map[string]interface{})
+			//n := make(map[string]map[string]interface{})
+			//m := n["teams"]
+
+			//var m dataMsg
+			//err = json.Unmarshal(body, &m)
+			//if err != nil {
+			//	log.Fatal("m error: ", err)
+			//}
+
+			//strs := m["teams"].([]interface{})
+			//str1 := strs[0]
+			//fmt.Println(str1["idLeague"].(map[string]string))
+			//n, _ := m["teams"]
+      //var n dataMsg
+			//err = json.Unmarshal(*m["teams"], &n)
+      //var dst interface{}
+			//dst = new(dstStruct)
+			//err = json.Unmarshal(m.teams, &dst)
+			//if err != nil {
+			//	log.Fatal("dst error: ", err)
+			//}
+
+      //var str string
+			//err = json.Unmarshal(*n["idLeague"], &str)
+
+			//fmt.Println(m["teams"])
+
+
+
+			SendMsgToDebuggingChannel("Here's a score", post.Id)
+			return
+		}
+
 	}
 
 	SendMsgToDebuggingChannel("I did not understand you!", post.Id)
