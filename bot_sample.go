@@ -19,11 +19,11 @@ import (
 )
 
 const (
-	SAMPLE_NAME = "Mattermost Bot Sample"
+	SAMPLE_NAME = "Mr. Clanky"
 
 	USER_EMAIL    = "mschult4@nd.edu"
 	USER_PASSWORD = "password"
-	USER_NAME     = "hackers_bot"
+	USER_NAME     = "mr_clanky"
 	USER_FIRST    = "Madalyn"
 	USER_LAST     = "Schulte"
 
@@ -143,7 +143,7 @@ func main() {
 
 	// Lets create a bot channel for logging debug messages into
 	CreateBotDebuggingChannelIfNeeded()
-	SendMsgToDebuggingChannel("_"+SAMPLE_NAME+" has **started** running_", "")
+	SendMsgToDebuggingChannel("_"+SAMPLE_NAME+" says 'Stay in school!'_", "")
 
 	// Lets start listening to some channels via the websocket!
 	webSocketClient, err := model.NewWebSocketClient4("wss://chat.ndlug.org", client.AuthToken)
@@ -286,25 +286,62 @@ func HandleMsgFromDebuggingChannel(event *model.WebSocketEvent) {
 
 		// if you see any word matching 'alive' then respond
 		if matched, _ := regexp.MatchString(`(?:^|\W)alive(?:$|\W)`, post.Message); matched {
-			SendMsgToDebuggingChannel("Yes I'm running", post.Id)
+			SendMsgToDebuggingChannel("It's aliiiiiive", post.Id)
 			return
 		}
 
 		// if you see any word matching 'up' then respond
 		if matched, _ := regexp.MatchString(`(?:^|\W)up(?:$|\W)`, post.Message); matched {
-			SendMsgToDebuggingChannel("Yes I'm running", post.Id)
+			SendMsgToDebuggingChannel("Yes I'm up up up!", post.Id)
 			return
 		}
 
 		// if you see any word matching 'running' then respond
 		if matched, _ := regexp.MatchString(`(?:^|\W)running(?:$|\W)`, post.Message); matched {
-			SendMsgToDebuggingChannel("Yes I'm running", post.Id)
+			SendMsgToDebuggingChannel("Yes I'm running (away!)", post.Id)
 			return
 		}
 
 		// if you see any word matching 'hello' then respond
 		if matched, _ := regexp.MatchString(`(?:^|\W)hello(?:$|\W)`, post.Message); matched {
-			SendMsgToDebuggingChannel("Yes I'm running", post.Id)
+			SendMsgToDebuggingChannel("Hello to you too!", post.Id)
+			return
+		}
+
+		if matched, _ := regexp.MatchString(`!scores? [nN][hH][lL](?:$|\W)`, post.Message); matched {
+			SendMsgToDebuggingChannel("these will be the nhl scores", post.Id)
+			return
+		}
+
+		if matched, _ := regexp.MatchString(`!scores? [nN][fF][lL](?:$|\W)`, post.Message); matched {
+			SendMsgToDebuggingChannel("these will be the nfl scores", post.Id)
+			return
+		}
+
+		if matched, _ := regexp.MatchString(`!scores? [nN][bB][aA](?:$|\W)`, post.Message); matched {
+			SendMsgToDebuggingChannel("these will be the nba scores", post.Id)
+			return
+		}
+
+		if matched, _ := regexp.MatchString(`!scores? [mM][lL][bB](?:$|\W)`, post.Message); matched {
+			SendMsgToDebuggingChannel("these will be the mlb scores", post.Id)
+			return
+		}
+
+
+		if matched, _ := regexp.MatchString(`!scores? [mM][lL][sS](?:$|\W)`, post.Message); matched {
+			SendMsgToDebuggingChannel("these will be the mls scores", post.Id)
+			return
+		}
+
+		if matched, _ := regexp.MatchString(`!scores? [eE][pP][lL](?:$|\W)`, post.Message); matched {
+			SendMsgToDebuggingChannel("these will be the epl scores", post.Id)
+			return
+		}
+
+
+		if matched, _ := regexp.MatchString(`!scores? aoe2(?:$|\W)`, post.Message); matched {
+			SendMsgToDebuggingChannel("who plays that game anymore, nerd?", post.Id)
 			return
 		}
 
@@ -368,7 +405,7 @@ func HandleMsgFromDebuggingChannel(event *model.WebSocketEvent) {
 
 	}
 
-	SendMsgToDebuggingChannel("I did not understand you!", post.Id)
+	//SendMsgToDebuggingChannel("I did not understand you!", post.Id)
 }
 
 func PrintError(err *model.AppError) {
