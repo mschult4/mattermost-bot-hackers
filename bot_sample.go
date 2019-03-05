@@ -395,6 +395,7 @@ func HandleMsgFromDebuggingChannel(event *model.WebSocketEvent) {
 
 		if matched, _ := regexp.MatchString(`!scores? [mM][lL][sS](?:$|\W)`, post.Message); matched {
 			SendMsgToDebuggingChannel("these will be the mls scores", post.Id)
+			LeagueScores(post, "4346")
 			return
 		}
 
@@ -472,10 +473,10 @@ func LeagueScores(post *model.Post, league_id string) {
 		home_score, _ := strconv.Atoi(s.Events[i].IntHomeScore)
 		home_team := s.Events[i].StrHomeTeam
 		away_team := s.Events[i].StrAwayTeam
-		if home_score >= away_score {
+		if home_score >= away_score && s.Events[i].IntHomeScore != "" {
 			home_team = "**"+home_team+"**"
 		}
-		if away_score >= home_score {
+		if away_score >= home_score && s.Events[i].IntAwayScore != "" {
 			away_team = "**"+away_team+"**"
 		}
 
