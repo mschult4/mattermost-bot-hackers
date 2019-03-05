@@ -490,7 +490,7 @@ func HandleMsgFromDebuggingChannel(event *model.WebSocketEvent) {
 
 		if matched, _ := regexp.MatchString(`!scores? team(?:$|\W)`, post.Message); matched {
 			client := &http.Client{}
-      split_str := strings.Split(post.Message, " ")
+			split_str := strings.Split(post.Message, " ")
 			request_str := ""
 			for i := 2; i < len(split_str); i++ {
 			   if i != 1{
@@ -498,7 +498,8 @@ func HandleMsgFromDebuggingChannel(event *model.WebSocketEvent) {
 				 }
 				 request_str += split_str[i]
 			}
-      req_str := "https://www.thesportsdb.com/api/v1/json/1/searchevents.php?e=" + request_str
+
+			req_str := "https://www.thesportsdb.com/api/v1/json/1/searchevents.php?e=" + request_str
 			req, _ := http.NewRequest("GET", req_str, nil)
 
 			res, err := client.Do(req)
@@ -515,9 +516,9 @@ func HandleMsgFromDebuggingChannel(event *model.WebSocketEvent) {
 				log.Fatal("s error: ", err)
 			}
 
-      current_time := time.Now().Local()
+			current_time := time.Now().Local()
 			first_past := 0
-      curr_date := current_time.Format("2006-01-02")
+			curr_date := current_time.Format("2006-01-02")
 			str_date := s.Event[0].DateEvent
 			for ; curr_date <= str_date; first_past++{
 				first_past = first_past + 1
@@ -525,16 +526,42 @@ func HandleMsgFromDebuggingChannel(event *model.WebSocketEvent) {
 			}
 
 			if len(s.Event) >= 1{
+				message := ""
 				//SendMsgToDebuggingChannel("3 Most Recent Team Events:", post.Id)
 				for i := first_past; i < int(math.Min(float64(len(s.Event)), 3)) + first_past; i++{
-					if (s.Event[i].IntHomeScore > s.Event[i].IntAwayScore){
+
+					away_score, _ := strconv.Atoi(s.Event[i].IntAwayScore)
+					home_score, _ := strconv.Atoi(s.Event[i].IntHomeScore)
+					home_team := s.Event[i].StrHomeTeam
+					away_team := s.Event[i].StrAwayTeam
+					if home_score >= away_score && s.Event[i].IntHomeScore != "" {
+						home_team = "**"+home_team+"**"
+					}
+					if away_score >= home_score && s.Event[i].IntAwayScore != "" {
+						away_team = "**"+away_team+"**"
+					}
+
+					score_string := ""
+					if (s.Event[i].IntHomeScore == "" && s.Event[i].IntAwayScore == "") {
+						score_string += "_(not reported)_"
+					} else {
+						score_string += s.Event[i].IntHomeScore + " - " + s.Event[i].IntAwayScore
+					}
+
+					message += s.Event[i].DateEvent + " | " + home_team + " vs. " + away_team + " | score: " + score_string + "\n"
+
+
+
+					/*if (s.Event[i].IntHomeScore > s.Event[i].IntAwayScore){
 						SendMsgToDebuggingChannel(s.Event[i].DateEvent + " | **" + s.Event[i].StrHomeTeam + "** vs. " + s.Event[i].StrAwayTeam + " | score: " + s.Event[i].IntHomeScore + " - " + s.Event[i].IntAwayScore, post.Id)
           }else if (s.Event[i].IntHomeScore < s.Event[i].IntAwayScore){
 						SendMsgToDebuggingChannel(s.Event[i].DateEvent + " | " + s.Event[i].StrHomeTeam + " vs. **" + s.Event[i].StrAwayTeam + "** | score: " + s.Event[i].IntHomeScore + " - " + s.Event[i].IntAwayScore, post.Id)
 					}else{
 						SendMsgToDebuggingChannel(s.Event[i].DateEvent + " | **" + s.Event[i].StrHomeTeam + " vs. **" + s.Event[i].StrAwayTeam + "** | score: " + s.Event[i].IntHomeScore + " - " + s.Event[i].IntAwayScore, post.Id)
-					}
+					}*/
 				}
+
+				SendMsgToDebuggingChannel(message, post.Id)
 				return
 			}
       //SendMsgToDebuggingChannel(s.Event[0].DateEvent, post.Id)
