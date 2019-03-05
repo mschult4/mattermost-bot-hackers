@@ -155,6 +155,17 @@ type LeaguesAPIResponse struct {
   Events []Leagues `json:"events"`
 }
 
+type LeagueSearch struct {
+IdLeague string `json:"idLeague"`
+StrLeague string `json:"strLeague"`
+StrSport string `json:"strSport"`
+StrLeagueAlternate string `json:"strLeagueAlternate"`
+}
+
+type LeagueSearchAPIResponse struct {
+  Leagues []LeagueSearch `json:"leagues"`
+}
+
 
 type dataMsg struct {
 	teams json.RawMessage
@@ -371,37 +382,37 @@ func HandleMsgFromDebuggingChannel(event *model.WebSocketEvent) {
 
 		if matched, _ := regexp.MatchString(`!scores? [nN][hH][lL](?:$|\W)`, post.Message); matched {
 			SendMsgToDebuggingChannel("these will be the nhl scores", post.Id)
-			LeagueScores(post, "4380")
+			go LeagueScores(post, "4380")
 			return
 		}
 
 		if matched, _ := regexp.MatchString(`!scores? [nN][fF][lL](?:$|\W)`, post.Message); matched {
 			SendMsgToDebuggingChannel("these will be the nfl scores", post.Id)
-			LeagueScores(post, "4391")
+			go LeagueScores(post, "4391")
 			return
 		}
 
 		if matched, _ := regexp.MatchString(`!scores? [nN][bB][aA](?:$|\W)`, post.Message); matched {
 			SendMsgToDebuggingChannel("these will be the nba scores", post.Id)
-			LeagueScores(post, "4387")
+			go LeagueScores(post, "4387")
 			return
 		}
 
 		if matched, _ := regexp.MatchString(`!scores? [mM][lL][bB](?:$|\W)`, post.Message); matched {
 			SendMsgToDebuggingChannel("these will be the mlb scores", post.Id)
-			LeagueScores(post, "4424")
+			go LeagueScores(post, "4424")
 			return
 		}
 
 		if matched, _ := regexp.MatchString(`!scores? [mM][lL][sS](?:$|\W)`, post.Message); matched {
 			SendMsgToDebuggingChannel("these will be the mls scores", post.Id)
-			LeagueScores(post, "4346")
+			go LeagueScores(post, "4346")
 			return
 		}
 
 		if matched, _ := regexp.MatchString(`!scores? [eE][pP][lL](?:$|\W)`, post.Message); matched {
 			SendMsgToDebuggingChannel("these will be the epl scores", post.Id)
-			LeagueScores(post, "4328")
+			go LeagueScores(post, "4328")
 			return
 		}
 
@@ -442,6 +453,48 @@ func HandleMsgFromDebuggingChannel(event *model.WebSocketEvent) {
 			return
 		}
 
+
+		if matched, _ := regexp.MatchString(`!leagues? (?:$|\W)`, post.Message); matched {
+			client := &http.Client{}
+      split_str := strings.Split(post.Message, " ")
+			request_str := ""
+			for i := 1; i < len(split_str); i++ {
+			   if i != 1{
+					 request_str += "_"
+				 }
+				 request_str += split_str[i]
+			}
+			req_str := "https://www.thesportsdb.com/api/v1/json/1/searchteams.php?t=" + request_str
+			req, _ := http.NewRequest("GET", req_str, nil)
+
+			res, err := client.Do(req)
+			if err != nil {
+				log.Fatal("res error: ", err)
+			}
+			body, err := ioutil.ReadAll(res.Body)
+			if err != nil {
+				log.Fatal("body error: ", err)
+			}
+
+      var s = new(SportsAPIResponse)
+			err = json.Unmarshal([]byte(body), &s)
+			if err != nil {
+				log.Fatal("s error: ", err)
+			}
+			if len(s.Teams) > 1{
+				SendMsgToDebuggingChannel("Multiple teams were returned. To disambiguate, type in one of these queries:", post.Id)
+				for i := 0; i < len(s.Teams); i++{
+					SendMsgToDebuggingChannel("!team " + s.Teams[i].StrTeam, post.Id)
+				}
+				return
+			}
+      if len(s.Teams) > 0{
+				SendMsgToDebuggingChannel(s.Teams[0].StrDescriptionEN, post.Id)
+			}else{
+				SendMsgToDebuggingChannel("I'm unable to understand your query as written. The proper format is ```!team cityname teamname```", post.Id)
+			}
+			return
+		}
 	}
 
 	//SendMsgToDebuggingChannel("I did not understand you!", post.Id)
@@ -468,6 +521,7 @@ func LeagueScores(post *model.Post, league_id string) {
     //fmt.Println(s.Teams[0].StrDescriptionEN)
 
 
+	message := ""
 	for i := 0; i < 10; i++ {
 		away_score, _ := strconv.Atoi(s.Events[i].IntAwayScore)
 		home_score, _ := strconv.Atoi(s.Events[i].IntHomeScore)
@@ -480,8 +534,17 @@ func LeagueScores(post *model.Post, league_id string) {
 			away_team = "**"+away_team+"**"
 		}
 
-		SendMsgToDebuggingChannel(s.Events[i].DateEvent + " | " + home_team + " vs. " + away_team + " | score: " + s.Events[i].IntHomeScore + " - " + s.Events[i].IntAwayScore, post.Id)
+		score_string := ""
+		if (s.Events[i].IntHomeScore == "" && s.Events[i].IntAwayScore == "") {
+			score_string += "_(not reported)_"
+		} else {
+			score_string += s.Events[i].IntHomeScore + " - " + s.Events[i].IntAwayScore
+		}
+
+		message += s.Events[i].DateEvent + " | " + home_team + " vs. " + away_team + " | score: " + score_string + "\n"
+
 	}
+	SendMsgToDebuggingChannel(message, post.Id)
 }
 
 func PrintError(err *model.AppError) {
