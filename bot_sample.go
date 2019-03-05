@@ -15,6 +15,8 @@ import (
 	//"fmt"
 	//"encoding/base64"
 	"log"
+	"math"
+	"time"
 	//"reflect"
 	"strconv"
 )
@@ -39,57 +41,115 @@ var botUser *model.User
 var botTeam *model.Team
 var debuggingChannel *model.Channel
 
+type Event struct {
+	IdEvent string `json:"idEvent"`
+	IdSoccerXML string `json:"idSoccerXML"`
+	StrEvent string `json:"strEvent"`
+	StrFilename string `json:"strFilename"`
+	StrSport string `json:"strSport"`
+	IdLeague string `json:"idLeague"`
+	StrLeague string `json:"strLeague"`
+	StrSeason string `json:"strSeason"`
+	StrDescriptionEN string `json:"strDescriptionEN"`
+	StrHomeTeam string `json:"strHomeTeam"`
+	StrAwayTeam string `json:"strAwayTeam"`
+	IntHomeScore string `json:"intHomeScore"`
+	IntRound string `json:"intRound"`
+	IntAwayScore string `json:"intAwayScore"`
+	IntSpectators string `json:"intSpectators"`
+	StrHomeGoalDetails string `json:"strHomeGoalDetails"`
+	StrHomeRedCards string `json:"strHomeRedCards"`
+	StrHomeYellowCards string `json:"strHomeYellowCards"`
+	StrHomeLineupGoalkeeper string `json:"strHomeLineupGoalkeeper"`
+	StrHomeLineupDefense string `json:"strHomeLineupDefense"`
+	StrHomeLineupMidfield string `json:"strHomeLineupMidfield"`
+	StrHomeLineupForward string `json:"strHomeLineupForward"`
+	StrHomeLineupSubstitutes string `json:"strHomeLineupSubstitutes"`
+	StrHomeFormation string `json:"strHomeFormation"`
+	StrAwayRedCards string `json:"strAwayRedCards"`
+	StrAwayYellowCards string `json:"strAwayYellowCards"`
+	StrAwayGoalDetails string `json:"strAwayGoalDetails"`
+	StrAwayLineupGoalkeeper string `json:"strAwayLineupGoalkeeper"`
+	StrAwayLineupDefense string `json:"strAwayLineupDefense"`
+	StrAwayLineupMidfield string `json:"strAwayLineupMidfield"`
+	StrAwayLineupForward string `json:"strAwayLineupForward"`
+	StrAwayLineupSubstitutes string `json:"strAwayLineupSubstitutes"`
+	StrAwayFormation string `json:"strAwayFormation"`
+	IntHomeShots string `json:"intHomeShots"`
+	IntAwayShots string `json:"intAwayShots"`
+	DateEvent string `json:"dateEvent"`
+	StrDate string `json:"strDate"`
+	StrTime string `json:"strTime"`
+	StrTVStation string `json:"strTVStation"`
+	IdHomeTeam string `json:"idHomeTeam"`
+	IdAwayTeam string `json:"idAwayTeam"`
+	StrResult string `json:"strResult"`
+	StrCircuit string `json:"strCircuit"`
+	StrCountry string `json:"strCountry"`
+	StrCity string `json:"strCity"`
+	StrPoster string `json:"strPoster"`
+	StrFanart string `json:"strFanart"`
+	StrThumb string `json:"strThumb"`
+	StrBanner string `json:"strBanner"`
+	StrMap string `json:"strMap"`
+	StrLocked string `json:"strLocked"`
+}
+
 type Sports struct {
-IdTeam string `json:"idTeam"`
-IdSoccerXML string `json:"idSoccerXML"`
-IntLoved string `json:"intLoved"`
-StrTeam string `json:"strTeam"`
-StrTeamShort string `json:"strTeamShort"`
-StrAlternate string `json:"strAlternate"`
-IntFormedYear string `json:"intFormedYear"`
-StrSport string `json:"strSport"`
-StrLeague string `json:"strLeague"`
-IdLeague string `json:"idLeague"`
-StrDivision string `json:"strDivision"`
-StrManager string `json:"strManager"`
-StrStadium string `json:"strStadium"`
-StrKeywords string `json:"strKeywords"`
-StrRSS string `json:"strRSS"`
-StrStadiumThumb string `json:"strStadiumThumb"`
-StrStadiumDescription string `json:"strStadiumDescription"`
-StrStadiumLocation string `json:"strStadiumLocation"`
-IntStadiumCapacity string `json:"intStadiumCapacity"`
-StrWebsite string `json:"strWebsite"`
-StrFacebook string `json:"strFacebook"`
-StrTwitter string `json:"strTwitter"`
-StrInstagram string `json:"strInstagram"`
-StrDescriptionEN string `json:"strDescriptionEN"`
-StrDescriptionDE string `json:"strDescriptionDE"`
-StrDescriptionFR string `json:"strDescriptionFR"`
-StrDescriptionCN string `json:"strDescriptionCN"`
-StrDescriptionIT string `json:"strDescriptionIT"`
-StrDescriptionJP string `json:"strDescriptionJP"`
-StrDescriptionRU string `json:"strDescriptionRU"`
-StrDescriptionES string `json:"strDescriptionES"`
-StrDescriptionPT string `json:"strDescriptionPT"`
-StrDescriptionSE string `json:"strDescriptionSE"`
-StrDescriptionNL string `json:"strDescriptionNL"`
-StrDescriptionHU string `json:"strDescriptionHU"`
-StrDescriptionNO string `json:"strDescriptionNO"`
-StrDescriptionIL string `json:"strDescriptionIL"`
-StrDescriptionPL string `json:"strDescriptionPL"`
-StrGender string `json:"strGender"`
-StrCountry string `json:"strCountry"`
-StrTeamBadge string `json:"strTeamBadge"`
-StrTeamJersey string `json:"strTeamJersey"`
-StrTeamLogo string `json:"strTeamLogo"`
-StrTeamFanart1 string `json:"strTeamFanart1"`
-StrTeamFanart2 string `json:"strTeamFanart2"`
-StrTeamFanart3 string `json:"strTeamFanart3"`
-StrTeamFanart4 string `json:"strTeamFanart4"`
-StrTeamBanner string `json:"strTeamBanner"`
-StrYoutube string `json:"strYoutube"`
-StrLocked string `json:"strLocked"`
+	IdTeam string `json:"idTeam"`
+	IdSoccerXML string `json:"idSoccerXML"`
+	IntLoved string `json:"intLoved"`
+	StrTeam string `json:"strTeam"`
+	StrTeamShort string `json:"strTeamShort"`
+	StrAlternate string `json:"strAlternate"`
+	IntFormedYear string `json:"intFormedYear"`
+	StrSport string `json:"strSport"`
+	StrLeague string `json:"strLeague"`
+	IdLeague string `json:"idLeague"`
+	StrDivision string `json:"strDivision"`
+	StrManager string `json:"strManager"`
+	StrStadium string `json:"strStadium"`
+	StrKeywords string `json:"strKeywords"`
+	StrRSS string `json:"strRSS"`
+	StrStadiumThumb string `json:"strStadiumThumb"`
+	StrStadiumDescription string `json:"strStadiumDescription"`
+	StrStadiumLocation string `json:"strStadiumLocation"`
+	IntStadiumCapacity string `json:"intStadiumCapacity"`
+	StrWebsite string `json:"strWebsite"`
+	StrFacebook string `json:"strFacebook"`
+	StrTwitter string `json:"strTwitter"`
+	StrInstagram string `json:"strInstagram"`
+	StrDescriptionEN string `json:"strDescriptionEN"`
+	StrDescriptionDE string `json:"strDescriptionDE"`
+	StrDescriptionFR string `json:"strDescriptionFR"`
+	StrDescriptionCN string `json:"strDescriptionCN"`
+	StrDescriptionIT string `json:"strDescriptionIT"`
+	StrDescriptionJP string `json:"strDescriptionJP"`
+	StrDescriptionRU string `json:"strDescriptionRU"`
+	StrDescriptionES string `json:"strDescriptionES"`
+	StrDescriptionPT string `json:"strDescriptionPT"`
+	StrDescriptionSE string `json:"strDescriptionSE"`
+	StrDescriptionNL string `json:"strDescriptionNL"`
+	StrDescriptionHU string `json:"strDescriptionHU"`
+	StrDescriptionNO string `json:"strDescriptionNO"`
+	StrDescriptionIL string `json:"strDescriptionIL"`
+	StrDescriptionPL string `json:"strDescriptionPL"`
+	StrGender string `json:"strGender"`
+	StrCountry string `json:"strCountry"`
+	StrTeamBadge string `json:"strTeamBadge"`
+	StrTeamJersey string `json:"strTeamJersey"`
+	StrTeamLogo string `json:"strTeamLogo"`
+	StrTeamFanart1 string `json:"strTeamFanart1"`
+	StrTeamFanart2 string `json:"strTeamFanart2"`
+	StrTeamFanart3 string `json:"strTeamFanart3"`
+	StrTeamFanart4 string `json:"strTeamFanart4"`
+	StrTeamBanner string `json:"strTeamBanner"`
+	StrYoutube string `json:"strYoutube"`
+	StrLocked string `json:"strLocked"`
+}
+
+type EventAPIResponse struct {
+	Event []Event `json:"event"`
 }
 
 type SportsAPIResponse struct {
@@ -429,9 +489,69 @@ func HandleMsgFromDebuggingChannel(event *model.WebSocketEvent) {
 		}*/
 
 		if matched, _ := regexp.MatchString(`!scores? team(?:$|\W)`, post.Message); matched {
-
 			client := &http.Client{}
-			req, _ := http.NewRequest("GET", "https://www.thesportsdb.com/api/v1/json/1/searchteams.php?t=Arsenal", nil)
+      split_str := strings.Split(post.Message, " ")
+			request_str := ""
+			for i := 2; i < len(split_str); i++ {
+			   if i != 1{
+					 request_str += "_"
+				 }
+				 request_str += split_str[i]
+			}
+      req_str := "https://www.thesportsdb.com/api/v1/json/1/searchevents.php?e=" + request_str
+			req, _ := http.NewRequest("GET", req_str, nil)
+
+			res, err := client.Do(req)
+			if err != nil {
+				log.Fatal("res error: ", err)
+			}
+			body, err := ioutil.ReadAll(res.Body)
+			if err != nil {
+				log.Fatal("body error: ", err)
+			}
+			var s = new(EventAPIResponse)
+			err = json.Unmarshal([]byte(body), &s)
+			if err != nil {
+				log.Fatal("s error: ", err)
+			}
+
+      current_time := time.Now().Local()
+			first_past := 0
+      curr_date := current_time.Format("2006-01-02")
+			str_date := s.Event[0].DateEvent
+			for ; curr_date <= str_date; first_past++{
+				first_past = first_past + 1
+				str_date = s.Event[first_past].DateEvent
+			}
+
+			if len(s.Event) >= 1{
+				//SendMsgToDebuggingChannel("3 Most Recent Team Events:", post.Id)
+				for i := first_past; i < int(math.Min(float64(len(s.Event)), 3)) + first_past; i++{
+					if (s.Event[i].IntHomeScore > s.Event[i].IntAwayScore){
+						SendMsgToDebuggingChannel(s.Event[i].DateEvent + " | **" + s.Event[i].StrHomeTeam + "** vs. " + s.Event[i].StrAwayTeam + " | score: " + s.Event[i].IntHomeScore + " - " + s.Event[i].IntAwayScore, post.Id)
+          }else if (s.Event[i].IntHomeScore < s.Event[i].IntAwayScore){
+						SendMsgToDebuggingChannel(s.Event[i].DateEvent + " | " + s.Event[i].StrHomeTeam + " vs. **" + s.Event[i].StrAwayTeam + "** | score: " + s.Event[i].IntHomeScore + " - " + s.Event[i].IntAwayScore, post.Id)
+					}else{
+						SendMsgToDebuggingChannel(s.Event[i].DateEvent + " | **" + s.Event[i].StrHomeTeam + " vs. **" + s.Event[i].StrAwayTeam + "** | score: " + s.Event[i].IntHomeScore + " - " + s.Event[i].IntAwayScore, post.Id)
+					}
+				}
+				return
+			}
+      //SendMsgToDebuggingChannel(s.Event[0].DateEvent, post.Id)
+		}
+
+		if matched, _ := regexp.MatchString(`!team(?:$|\W)`, post.Message); matched {
+			client := &http.Client{}
+      split_str := strings.Split(post.Message, " ")
+			request_str := ""
+			for i := 1; i < len(split_str); i++ {
+			   if i != 1{
+					 request_str += "_"
+				 }
+				 request_str += split_str[i]
+			}
+			req_str := "https://www.thesportsdb.com/api/v1/json/1/searchteams.php?t=" + request_str
+			req, _ := http.NewRequest("GET", req_str, nil)
 
 			res, err := client.Do(req)
 			if err != nil {
@@ -447,9 +567,18 @@ func HandleMsgFromDebuggingChannel(event *model.WebSocketEvent) {
 			if err != nil {
 				log.Fatal("s error: ", err)
 			}
-      //fmt.Println(s.Teams[0].StrDescriptionEN)
-
-			SendMsgToDebuggingChannel(s.Teams[0].StrDescriptionEN, post.Id)
+			if len(s.Teams) > 1{
+				SendMsgToDebuggingChannel("Multiple teams were returned. To disambiguate, type in one of these queries:", post.Id)
+				for i := 0; i < len(s.Teams); i++{
+					SendMsgToDebuggingChannel("!team " + s.Teams[i].StrTeam, post.Id)
+				}
+				return
+			}
+      if len(s.Teams) > 0{
+				SendMsgToDebuggingChannel(s.Teams[0].StrDescriptionEN, post.Id)
+			}else{
+				SendMsgToDebuggingChannel("I'm unable to understand your query as written. The proper format is ```!team cityname teamname```", post.Id)
+			}
 			return
 		}
 
