@@ -19,6 +19,7 @@ import (
 	"time"
 	//"reflect"
 	"strconv"
+	"sort"
 )
 
 const (
@@ -515,6 +516,9 @@ func HandleMsgFromDebuggingChannel(event *model.WebSocketEvent) {
 			if err != nil {
 				log.Fatal("s error: ", err)
 			}
+			sort.Slice(s.Event, func(i, j int) bool {
+			  return s.Event[i].DateEvent > s.Event[j].DateEvent
+			})
 
 			current_time := time.Now().Local()
 			first_past := 0
@@ -522,10 +526,17 @@ func HandleMsgFromDebuggingChannel(event *model.WebSocketEvent) {
 			str_date := s.Event[0].DateEvent
 			for ; curr_date <= str_date; first_past++{
 				first_past = first_past + 1
+				if first_past >= len(s.Event){
+					break
+				}
+				println("currdate: " + curr_date)
 				str_date = s.Event[first_past].DateEvent
+				println("strdate: " + str_date)
 			}
 
-			if len(s.Event) >= 1{
+      //println(len(s.Event))
+			println(first_past)
+			if len(s.Event) >= 1 && first_past < len(s.Event){
 				message := ""
 				//SendMsgToDebuggingChannel("3 Most Recent Team Events:", post.Id)
 				for i := first_past; i < int(math.Min(float64(len(s.Event)), 3)) + first_past; i++{
@@ -563,6 +574,8 @@ func HandleMsgFromDebuggingChannel(event *model.WebSocketEvent) {
 
 				SendMsgToDebuggingChannel(message, post.Id)
 				return
+			}else{
+				SendMsgToDebuggingChannel("I'm unable to understand your query as written. The proper format is ```!scores team cityname teamname```", post.Id)
 			}
       //SendMsgToDebuggingChannel(s.Event[0].DateEvent, post.Id)
 		}
