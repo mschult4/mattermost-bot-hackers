@@ -12,10 +12,11 @@ import (
 	"github.com/mattermost/mattermost-server/model"
 	"io/ioutil"
 	"encoding/json"
-	//"fmt"
+	"fmt"
 	//"encoding/base64"
 	"log"
-	//"reflect"
+	"reflect"
+	"strconv"
 )
 
 const (
@@ -94,6 +95,66 @@ StrLocked string `json:"strLocked"`
 type SportsAPIResponse struct {
   Teams []Sports `json:"teams"`
 }
+
+type Leagues struct {
+IdEvent string `json:"idEvent"`
+IdSoccerXML string `json:"idSoccerXML"`
+StrEvent string `json:"strEvent"`
+StrFilename string `json:"strFilename"`
+StrSport string `json:"strSport"`
+IdLeague string `json:"idLeague"`
+StrLeague string `json:"strLeague"`
+StrSeason string `json:"strSeason"`
+StrDescriptionEN string `json:"strDescriptionEN"`
+StrHomeTeam string `json:"strHomeTeam"`
+StrAwayTeam string `json:"strAwayTeam"`
+IntHomeScore string `json:"intHomeScore"`
+IntRound string `json:"intRound"`
+IntAwayScore string `json:"intAwayScore"`
+IntSpectators string `json:"intSpectators"`
+StrHomeGoalDetails string `json:"strHomeGoalDetails"`
+StrHomeRedCards string `json:"strHomeRedCards"`
+StrHomeYellowCards string `json:"strHomeYellowCards"`
+StrHomeLineupGoalkeeper string `json:"strHomeLineupGoalkeeper"`
+StrHomeLineupDefense string `json:"strHomeLineupDefense"`
+StrHomeLineupMidfield string `json:"strHomeLineupMidfield"`
+StrHomeLineupForward string `json:"strHomeLineupForward"`
+StrHomeLineupSubstitutes string `json:"strHomeLineupSubstitutes"`
+StrHomeFormation string `json:"strHomeFormation"`
+StrAwayRedCards string `json:"strAwayRedCards"`
+StrAwayYellowCards string `json:"strAwayYellowCards"`
+StrAwayGoalDetails string `json:"strAwayGoalDetails"`
+StrAwayLineupGoalkeeper string `json:"strAwayLineupGoalkeeper"`
+StrAwayLineupDefense string `json:"strAwayLineupDefense"`
+StrAwayLineupMidfield string `json:"strAwayLineupMidfield"`
+StrAwayLineupForward string `json:"strAwayLineForward"`
+StrAwayLineupSubstitutes string `json:"strAwayLineup"`
+StrAwayFormation string `json:"strAwayFormation"`
+IntHomeShots string `json:"intHomeShots"`
+IntAwayShots string `json:"intAwayShots"`
+DateEvent string `json:"dateEvent"`
+StrDate string `json:"strDate"`
+StrTime string `json:"strTime"`
+StrTVStation string `json:"strTVStation"`
+IdHomeTeam string `json:"idHomeTeam"`
+IdAwayTeam string `json:"idAwayTeam"`
+StrResult string `json:"strResult"`
+StrCircuit string `json:"strCircuit"`
+StrCountry string `json:"strCountry"`
+StrCity string `json:"strCity"`
+StrPoster string `json:"strPoster"`
+StrFanart string `json:"strFanart"`
+StrThumb string `json:"strThumb"`
+StrBanner string `json:"strBanner"`
+StrMap string `json:"strMap"`
+StrLocked string `json:"strLocked"`
+
+}
+
+type LeaguesAPIResponse struct {
+  Events []Leagues `json:"events"`
+}
+
 
 type dataMsg struct {
 	teams json.RawMessage
@@ -310,21 +371,129 @@ func HandleMsgFromDebuggingChannel(event *model.WebSocketEvent) {
 
 		if matched, _ := regexp.MatchString(`!scores? [nN][hH][lL](?:$|\W)`, post.Message); matched {
 			SendMsgToDebuggingChannel("these will be the nhl scores", post.Id)
+
+			client := &http.Client{}
+			req, _ := http.NewRequest("GET", "https://www.thesportsdb.com/api/v1/json/1/eventspastleague.php?id=4380", nil)
+
+			res, err := client.Do(req)
+			if err != nil {
+				log.Fatal("res error: ", err)
+			}
+			body, err := ioutil.ReadAll(res.Body)
+			if err != nil {
+				log.Fatal("body error: ", err)
+			}
+
+      var s = new(LeaguesAPIResponse)
+			err = json.Unmarshal([]byte(body), &s)
+			if err != nil {
+				log.Fatal("s error: ", err)
+			}
+      //fmt.Println(s.Teams[0].StrDescriptionEN)
+
+
+			for i := 0; i < 10; i++ {
+				away_score, _ := strconv.Atoi(s.Events[i].IntAwayScore)
+				home_score, _ := strconv.Atoi(s.Events[i].IntHomeScore)
+				home_team := s.Events[i].StrHomeTeam
+				away_team := s.Events[i].StrAwayTeam
+				if home_score >= away_score {
+					home_team = "**"+home_team+"**"
+				}
+				if away_score >= home_score {
+					away_team = "**"+away_team+"**"
+				}
+
+				SendMsgToDebuggingChannel(s.Events[i].DateEvent + " | " + home_team + " vs. " + away_team + " | score: " + s.Events[i].IntHomeScore + " - " + s.Events[i].IntAwayScore, post.Id)
+			}
+
 			return
 		}
 
 		if matched, _ := regexp.MatchString(`!scores? [nN][fF][lL](?:$|\W)`, post.Message); matched {
 			SendMsgToDebuggingChannel("these will be the nfl scores", post.Id)
+
+			client := &http.Client{}
+			req, _ := http.NewRequest("GET", "https://www.thesportsdb.com/api/v1/json/1/eventspastleague.php?id=4391", nil)
+
+			res, err := client.Do(req)
+			if err != nil {
+				log.Fatal("res error: ", err)
+			}
+			body, err := ioutil.ReadAll(res.Body)
+			if err != nil {
+				log.Fatal("body error: ", err)
+			}
+
+      var s = new(LeaguesAPIResponse)
+			err = json.Unmarshal([]byte(body), &s)
+			if err != nil {
+				log.Fatal("s error: ", err)
+			}
+      //fmt.Println(s.Teams[0].StrDescriptionEN)
+
+
+			for i := 0; i < 10; i++ {
+				away_score, _ := strconv.Atoi(s.Events[i].IntAwayScore)
+				home_score, _ := strconv.Atoi(s.Events[i].IntHomeScore)
+				home_team := s.Events[i].StrHomeTeam
+				away_team := s.Events[i].StrAwayTeam
+				if home_score >= away_score {
+					home_team = "**"+home_team+"**"
+				}
+				if away_score >= home_score {
+					away_team = "**"+away_team+"**"
+				}
+
+				SendMsgToDebuggingChannel(s.Events[i].DateEvent + " | " + home_team + " vs. " + away_team + " | score: " + s.Events[i].IntHomeScore + " - " + s.Events[i].IntAwayScore, post.Id)
+			}
 			return
 		}
 
 		if matched, _ := regexp.MatchString(`!scores? [nN][bB][aA](?:$|\W)`, post.Message); matched {
 			SendMsgToDebuggingChannel("these will be the nba scores", post.Id)
+
+			client := &http.Client{}
+			req, _ := http.NewRequest("GET", "https://www.thesportsdb.com/api/v1/json/1/eventspastleague.php?id=4387", nil)
+
+			res, err := client.Do(req)
+			if err != nil {
+				log.Fatal("res error: ", err)
+			}
+			body, err := ioutil.ReadAll(res.Body)
+			if err != nil {
+				log.Fatal("body error: ", err)
+			}
+
+      var s = new(LeaguesAPIResponse)
+			err = json.Unmarshal([]byte(body), &s)
+			if err != nil {
+				log.Fatal("s error: ", err)
+			}
+      //fmt.Println(s.Teams[0].StrDescriptionEN)
+
+
+			for i := 0; i < 10; i++ {
+				away_score, _ := strconv.Atoi(s.Events[i].IntAwayScore)
+				home_score, _ := strconv.Atoi(s.Events[i].IntHomeScore)
+				home_team := s.Events[i].StrHomeTeam
+				away_team := s.Events[i].StrAwayTeam
+				if home_score >= away_score {
+					home_team = "**"+home_team+"**"
+				}
+				if away_score >= home_score {
+					away_team = "**"+away_team+"**"
+				}
+
+				SendMsgToDebuggingChannel(s.Events[i].DateEvent + " | " + home_team + " vs. " + away_team + " | score: " + s.Events[i].IntHomeScore + " - " + s.Events[i].IntAwayScore, post.Id)
+			}
 			return
 		}
 
 		if matched, _ := regexp.MatchString(`!scores? [mM][lL][bB](?:$|\W)`, post.Message); matched {
 			SendMsgToDebuggingChannel("these will be the mlb scores", post.Id)
+			fmt.Println(reflect.TypeOf(post))
+			LeagueScores(post, "4424")
 			return
 		}
 
@@ -336,6 +505,42 @@ func HandleMsgFromDebuggingChannel(event *model.WebSocketEvent) {
 
 		if matched, _ := regexp.MatchString(`!scores? [eE][pP][lL](?:$|\W)`, post.Message); matched {
 			SendMsgToDebuggingChannel("these will be the epl scores", post.Id)
+
+			client := &http.Client{}
+			req, _ := http.NewRequest("GET", "https://www.thesportsdb.com/api/v1/json/1/eventspastleague.php?id=4328", nil)
+
+			res, err := client.Do(req)
+			if err != nil {
+				log.Fatal("res error: ", err)
+			}
+			body, err := ioutil.ReadAll(res.Body)
+			if err != nil {
+				log.Fatal("body error: ", err)
+			}
+
+      var s = new(LeaguesAPIResponse)
+			err = json.Unmarshal([]byte(body), &s)
+			if err != nil {
+				log.Fatal("s error: ", err)
+			}
+      //fmt.Println(s.Teams[0].StrDescriptionEN)
+
+
+			for i := 0; i < 10; i++ {
+				away_score, _ := strconv.Atoi(s.Events[i].IntAwayScore)
+				home_score, _ := strconv.Atoi(s.Events[i].IntHomeScore)
+				home_team := s.Events[i].StrHomeTeam
+				away_team := s.Events[i].StrAwayTeam
+				if home_score >= away_score {
+					home_team = "**"+home_team+"**"
+				}
+				if away_score >= home_score {
+					away_team = "**"+away_team+"**"
+				}
+
+				SendMsgToDebuggingChannel(s.Events[i].DateEvent + " | " + home_team + " vs. " + away_team + " | score: " + s.Events[i].IntHomeScore + " - " + s.Events[i].IntAwayScore, post.Id)
+			}
+
 			return
 		}
 
@@ -346,12 +551,13 @@ func HandleMsgFromDebuggingChannel(event *model.WebSocketEvent) {
 		}
 
 		// if you see any word matching 'score' then respond
-		if matched, _ := regexp.MatchString(`(?:^|\W)score(?:$|\W)`, post.Message); matched {
+		/*if matched, _ := regexp.MatchString(`(?:^|\W)score(?:$|\W)`, post.Message); matched {
 			SendMsgToDebuggingChannel("Here's a score", post.Id)
 			return
-		}
+		}*/
 
-		if matched, _ := regexp.MatchString(`(?:^|\W)arsenal(?:$|\W)`, post.Message); matched {
+		if matched, _ := regexp.MatchString(`!scores? team(?:$|\W)`, post.Message); matched {
+
 			client := &http.Client{}
 			req, _ := http.NewRequest("GET", "https://www.thesportsdb.com/api/v1/json/1/searchteams.php?t=Arsenal", nil)
 
@@ -379,6 +585,43 @@ func HandleMsgFromDebuggingChannel(event *model.WebSocketEvent) {
 
 	//SendMsgToDebuggingChannel("I did not understand you!", post.Id)
 }
+
+func LeagueScores(post *model.Post, league_id string) {
+	client := &http.Client{}
+	req, _ := http.NewRequest("GET", "https://www.thesportsdb.com/api/v1/json/1/eventspastleague.php?id="+league_id, nil)
+
+	res, err := client.Do(req)
+	if err != nil {
+		log.Fatal("res error: ", err)
+	}
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		log.Fatal("body error: ", err)
+	}
+
+    var s = new(LeaguesAPIResponse)
+	err = json.Unmarshal([]byte(body), &s)
+	if err != nil {
+		log.Fatal("s error: ", err)
+	}
+    //fmt.Println(s.Teams[0].StrDescriptionEN)
+
+
+	for i := 0; i < 10; i++ {
+		away_score, _ := strconv.Atoi(s.Events[i].IntAwayScore)
+		home_score, _ := strconv.Atoi(s.Events[i].IntHomeScore)
+		home_team := s.Events[i].StrHomeTeam
+		away_team := s.Events[i].StrAwayTeam
+		if home_score >= away_score {
+			home_team = "**"+home_team+"**"
+		}
+		if away_score >= home_score {
+			away_team = "**"+away_team+"**"
+		}
+
+		SendMsgToDebuggingChannel(s.Events[i].DateEvent + " | " + home_team + " vs. " + away_team + " | score: " + s.Events[i].IntHomeScore + " - " + s.Events[i].IntAwayScore, post.Id)
+	}
+} 
 
 func PrintError(err *model.AppError) {
 	println("\tError Details:")
