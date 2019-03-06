@@ -483,6 +483,11 @@ func HandleMsgFromDebuggingChannel(event *model.WebSocketEvent) {
 			return
 		}
 
+		if matched, _ := regexp.MatchString(`!help(?:$|\W)`, post.Message); matched {
+			SendMsgToDebuggingChannel("List of possible commands: \n ```!scores team cityname teamname```\n", post.Id)
+			return
+		}
+
 		// if you see any word matching 'score' then respond
 		/*if matched, _ := regexp.MatchString(`(?:^|\W)score(?:$|\W)`, post.Message); matched {
 			SendMsgToDebuggingChannel("Here's a score", post.Id)
@@ -520,27 +525,36 @@ func HandleMsgFromDebuggingChannel(event *model.WebSocketEvent) {
 			  return s.Event[i].DateEvent > s.Event[j].DateEvent
 			})
 
+			if (len(s.Event) == 0){
+				SendMsgToDebuggingChannel("Your query returned no results. Try being more specific. The proper format is ```!scores team cityname teamname```", post.Id)
+				return
+			}
+
 			current_time := time.Now().Local()
 			first_past := 0
 			curr_date := current_time.Format("2006-01-02")
 			str_date := s.Event[0].DateEvent
 			for ; curr_date <= str_date; first_past++{
-				first_past = first_past + 1
 				if first_past >= len(s.Event){
+					first_past -= 1
 					break
 				}
-				println("currdate: " + curr_date)
 				str_date = s.Event[first_past].DateEvent
-				println("strdate: " + str_date)
 			}
-
-      //println(len(s.Event))
-			println(first_past)
-			if len(s.Event) >= 1 && first_past < len(s.Event){
+			println("first_past: " + strconv.Itoa(first_past))
+			if first_past != 0{
+				first_past -=1
+			}
+			if len(s.Event) >= 1 && first_past <= len(s.Event){
 				message := ""
-				//SendMsgToDebuggingChannel("3 Most Recent Team Events:", post.Id)
-				for i := first_past; i < int(math.Min(float64(len(s.Event)), 3)) + first_past; i++{
-
+				min_val := int(math.Min(float64(len(s.Event)-1), float64(3+first_past)))
+				println(min_val)
+				println(first_past)
+				for i := first_past; i <= min_val; i++{
+					if (i >= len(s.Event)){
+						break
+					}
+					println("i: " + strconv.Itoa(i))
 					away_score, _ := strconv.Atoi(s.Event[i].IntAwayScore)
 					home_score, _ := strconv.Atoi(s.Event[i].IntHomeScore)
 					home_team := s.Event[i].StrHomeTeam
@@ -560,16 +574,6 @@ func HandleMsgFromDebuggingChannel(event *model.WebSocketEvent) {
 					}
 
 					message += s.Event[i].DateEvent + " | " + home_team + " vs. " + away_team + " | score: " + score_string + "\n"
-
-
-
-					/*if (s.Event[i].IntHomeScore > s.Event[i].IntAwayScore){
-						SendMsgToDebuggingChannel(s.Event[i].DateEvent + " | **" + s.Event[i].StrHomeTeam + "** vs. " + s.Event[i].StrAwayTeam + " | score: " + s.Event[i].IntHomeScore + " - " + s.Event[i].IntAwayScore, post.Id)
-          }else if (s.Event[i].IntHomeScore < s.Event[i].IntAwayScore){
-						SendMsgToDebuggingChannel(s.Event[i].DateEvent + " | " + s.Event[i].StrHomeTeam + " vs. **" + s.Event[i].StrAwayTeam + "** | score: " + s.Event[i].IntHomeScore + " - " + s.Event[i].IntAwayScore, post.Id)
-					}else{
-						SendMsgToDebuggingChannel(s.Event[i].DateEvent + " | **" + s.Event[i].StrHomeTeam + " vs. **" + s.Event[i].StrAwayTeam + "** | score: " + s.Event[i].IntHomeScore + " - " + s.Event[i].IntAwayScore, post.Id)
-					}*/
 				}
 
 				SendMsgToDebuggingChannel(message, post.Id)
