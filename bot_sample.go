@@ -443,7 +443,7 @@ func HandleMsgFromDebuggingChannel(event *model.WebSocketEvent) {
 
 		if matched, _ := regexp.MatchString(`!scores? [nN][hH][lL](?:$|\W)`, post.Message); matched {
 			SendMsgToDebuggingChannel("these will be the nhl scores", post.Id)
-			go LeagueScores(post, "4380")
+				go LeagueScores(post, "4380")
 			return
 		}
 
@@ -524,7 +524,7 @@ func HandleMsgFromDebuggingChannel(event *model.WebSocketEvent) {
 			sort.Slice(s.Event, func(i, j int) bool {
 			  return s.Event[i].DateEvent > s.Event[j].DateEvent
 			})
-
+      println("len(s.Event)): " + strconv.Itoa(len(s.Event)))
 			if (len(s.Event) == 0){
 				SendMsgToDebuggingChannel("Your query returned no results. Try being more specific. The proper format is ```!scores team cityname teamname```", post.Id)
 				return
@@ -536,25 +536,61 @@ func HandleMsgFromDebuggingChannel(event *model.WebSocketEvent) {
 			str_date := s.Event[0].DateEvent
 			for ; curr_date <= str_date; first_past++{
 				if first_past >= len(s.Event){
-					first_past -= 1
+					//first_past -= 1
 					break
 				}
 				str_date = s.Event[first_past].DateEvent
 			}
-			println("first_past: " + strconv.Itoa(first_past))
-			if first_past != 0{
+			//println("first_past: " + strconv.Itoa(first_past))
+		  if first_past != 0 && curr_date>=str_date{
 				first_past -=1
 			}
+
+     if len(s.Event) >= 1{
+			 message := ""
+			 found := 0
+			 for i := 0; i < 3; i++{
+				 if i+1 > len(s.Event) || s.Event[i].DateEvent < curr_date{
+					 break;
+				 }
+				 found = 1
+				 away_score, _ := strconv.Atoi(s.Event[i].IntAwayScore)
+				 home_score, _ := strconv.Atoi(s.Event[i].IntHomeScore)
+				 home_team := s.Event[i].StrHomeTeam
+				 away_team := s.Event[i].StrAwayTeam
+				 if home_score >= away_score && s.Event[i].IntHomeScore != "" {
+					 home_team = "**"+home_team+"**"
+				 }
+				 if away_score >= home_score && s.Event[i].IntAwayScore != "" {
+					 away_team = "**"+away_team+"**"
+				 }
+
+				 score_string := ""
+				 if (s.Event[i].IntHomeScore == "" && s.Event[i].IntAwayScore == "") {
+					 score_string += "_(not reported)_"
+				 } else {
+					 score_string += s.Event[i].IntHomeScore + " - " + s.Event[i].IntAwayScore
+				 }
+
+				 message += s.Event[i].DateEvent + " | " + home_team + " vs. " + away_team + " | score: " + score_string + "\n"
+			 }
+			 if found == 1{
+				 SendMsgToDebuggingChannel("**Upcoming Events**\n" +message, post.Id)
+			 }else{
+				 SendMsgToDebuggingChannel("**Upcoming Events**\n_(no upcoming events)_", post.Id)
+			 }
+		 }
+
 			if len(s.Event) >= 1 && first_past <= len(s.Event){
 				message := ""
 				min_val := int(math.Min(float64(len(s.Event)-1), float64(3+first_past)))
-				println(min_val)
-				println(first_past)
+				//println(min_val)
+				println("first_past: " + strconv.Itoa(first_past))
 				for i := first_past; i <= min_val; i++{
 					if (i >= len(s.Event)){
 						break
 					}
-					println("i: " + strconv.Itoa(i))
+					//println("i: " + strconv.Itoa(i))
 					away_score, _ := strconv.Atoi(s.Event[i].IntAwayScore)
 					home_score, _ := strconv.Atoi(s.Event[i].IntHomeScore)
 					home_team := s.Event[i].StrHomeTeam
@@ -575,8 +611,10 @@ func HandleMsgFromDebuggingChannel(event *model.WebSocketEvent) {
 
 					message += s.Event[i].DateEvent + " | " + home_team + " vs. " + away_team + " | score: " + score_string + "\n"
 				}
-
-				SendMsgToDebuggingChannel(message, post.Id)
+        if (message == ""){
+					message += "_(no recent events)_"
+				}
+				SendMsgToDebuggingChannel("**Recent Events:**\n" + message, post.Id)
 				return
 			}else{
 				SendMsgToDebuggingChannel("I'm unable to understand your query as written. The proper format is ```!scores team cityname teamname```", post.Id)
