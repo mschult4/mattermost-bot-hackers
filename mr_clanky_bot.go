@@ -484,7 +484,7 @@ func HandleMsgFromDebuggingChannel(event *model.WebSocketEvent) {
 		}
 
 		if matched, _ := regexp.MatchString(`!help(?:$|\W)`, post.Message); matched {
-			SendMsgToDebuggingChannel("List of possible commands: \n ```!scores team cityname teamname```\n", post.Id)
+			SendMsgToDebuggingChannel("List of possible commands: \n ```!scores team [cityname] [teamname]```\n ```!scores (nhl | nba | nfl | mls | epl | mlb)```\n ```!team [cityname] [teamname]```\n", post.Id)
 			return
 		}
 
@@ -554,10 +554,10 @@ func HandleMsgFromDebuggingChannel(event *model.WebSocketEvent) {
 					 break;
 				 }
 				 found = 1
-				 away_score, _ := strconv.Atoi(s.Event[i].IntAwayScore)
-				 home_score, _ := strconv.Atoi(s.Event[i].IntHomeScore)
 				 home_team := s.Event[i].StrHomeTeam
 				 away_team := s.Event[i].StrAwayTeam
+				 /*away_score, _ := strconv.Atoi(s.Event[i].IntAwayScore)
+				 home_score, _ := strconv.Atoi(s.Event[i].IntHomeScore)
 				 if home_score >= away_score && s.Event[i].IntHomeScore != "" {
 					 home_team = "**"+home_team+"**"
 				 }
@@ -570,9 +570,9 @@ func HandleMsgFromDebuggingChannel(event *model.WebSocketEvent) {
 					 score_string += "_(not reported)_"
 				 } else {
 					 score_string += s.Event[i].IntHomeScore + " - " + s.Event[i].IntAwayScore
-				 }
+				 }*/
 
-				 message += s.Event[i].DateEvent + " | " + home_team + " vs. " + away_team + " | score: " + score_string + "\n"
+				 message += s.Event[i].DateEvent + " | " + home_team + " vs. " + away_team + "\n"
 			 }
 			 if found == 1{
 				 SendMsgToDebuggingChannel("**Upcoming Events**\n" +message, post.Id)
@@ -663,52 +663,7 @@ func HandleMsgFromDebuggingChannel(event *model.WebSocketEvent) {
 			}
 			return
 		}
-
-
-		if matched, _ := regexp.MatchString(`!leagues? (?:$|\W)`, post.Message); matched {
-			client := &http.Client{}
-      split_str := strings.Split(post.Message, " ")
-			request_str := ""
-			for i := 1; i < len(split_str); i++ {
-			   if i != 1{
-					 request_str += "_"
-				 }
-				 request_str += split_str[i]
-			}
-			req_str := "https://www.thesportsdb.com/api/v1/json/1/searchteams.php?t=" + request_str
-			req, _ := http.NewRequest("GET", req_str, nil)
-
-			res, err := client.Do(req)
-			if err != nil {
-				log.Fatal("res error: ", err)
-			}
-			body, err := ioutil.ReadAll(res.Body)
-			if err != nil {
-				log.Fatal("body error: ", err)
-			}
-
-      var s = new(SportsAPIResponse)
-			err = json.Unmarshal([]byte(body), &s)
-			if err != nil {
-				log.Fatal("s error: ", err)
-			}
-			if len(s.Teams) > 1{
-				SendMsgToDebuggingChannel("Multiple teams were returned. To disambiguate, type in one of these queries:", post.Id)
-				for i := 0; i < len(s.Teams); i++{
-					SendMsgToDebuggingChannel("!team " + s.Teams[i].StrTeam, post.Id)
-				}
-				return
-			}
-      if len(s.Teams) > 0{
-				SendMsgToDebuggingChannel(s.Teams[0].StrDescriptionEN, post.Id)
-			}else{
-				SendMsgToDebuggingChannel("I'm unable to understand your query as written. The proper format is ```!team cityname teamname```", post.Id)
-			}
-			return
-		}
 	}
-
-	//SendMsgToDebuggingChannel("I did not understand you!", post.Id)
 }
 
 func LeagueScores(post *model.Post, league_id string) {
@@ -729,7 +684,6 @@ func LeagueScores(post *model.Post, league_id string) {
 	if err != nil {
 		log.Fatal("s error: ", err)
 	}
-    //fmt.Println(s.Teams[0].StrDescriptionEN)
 
 
 	message := ""
