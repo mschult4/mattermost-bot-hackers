@@ -442,37 +442,31 @@ func HandleMsgFromDebuggingChannel(event *model.WebSocketEvent) {
 		}
 
 		if matched, _ := regexp.MatchString(`!scores? [nN][hH][lL](?:$|\W)`, post.Message); matched {
-			SendMsgToDebuggingChannel("these will be the nhl scores", post.Id)
-				go LeagueScores(post, "4380")
+			go LeagueScores(post, "4380")
 			return
 		}
 
 		if matched, _ := regexp.MatchString(`!scores? [nN][fF][lL](?:$|\W)`, post.Message); matched {
-			SendMsgToDebuggingChannel("these will be the nfl scores", post.Id)
 			go LeagueScores(post, "4391")
 			return
 		}
 
 		if matched, _ := regexp.MatchString(`!scores? [nN][bB][aA](?:$|\W)`, post.Message); matched {
-			SendMsgToDebuggingChannel("these will be the nba scores", post.Id)
 			go LeagueScores(post, "4387")
 			return
 		}
 
 		if matched, _ := regexp.MatchString(`!scores? [mM][lL][bB](?:$|\W)`, post.Message); matched {
-			SendMsgToDebuggingChannel("these will be the mlb scores", post.Id)
 			go LeagueScores(post, "4424")
 			return
 		}
 
 		if matched, _ := regexp.MatchString(`!scores? [mM][lL][sS](?:$|\W)`, post.Message); matched {
-			SendMsgToDebuggingChannel("these will be the mls scores", post.Id)
 			go LeagueScores(post, "4346")
 			return
 		}
 
 		if matched, _ := regexp.MatchString(`!scores? [eE][pP][lL](?:$|\W)`, post.Message); matched {
-			SendMsgToDebuggingChannel("these will be the epl scores", post.Id)
 			go LeagueScores(post, "4328")
 			return
 		}
